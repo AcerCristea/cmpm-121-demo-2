@@ -97,6 +97,6 @@ button:focus-visible {
 canvas {
   border: 1px solid black;
   border-radius: 8px;
-  filter: drop-shadow(0 0 0.75rem rgb(176, 172, 173));
+  filter: drop-shadow(0 0 0.75rem rgb(210, 117, 140));
   margin-top: 20px;
 }
