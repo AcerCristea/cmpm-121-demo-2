@@ -20,14 +20,24 @@ const clearButton = document.createElement("button");
 clearButton.innerText = "Clear";
 app.append(clearButton);
 
+const undoButton = document.createElement("button");
+undoButton.innerText = "Undo";
+app.append(undoButton);
+
+const redoButton = document.createElement("button");
+redoButton.innerText = "Redo";
+app.append(redoButton);
+
 let lines: { x: number; y: number }[][] = [];
 let currentLine: { x: number; y: number }[] = [];
+let redoStack: { x: number; y: number}[][] = [];
 let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
   currentLine = [];
   currentLine.push({ x: e.offsetX, y: e.offsetY });
+  redoStack = [];
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
 
@@ -57,7 +67,26 @@ canvas.addEventListener("mouseout", () => {
 clearButton.addEventListener("click", () => {
   lines = [];
   currentLine = [];
+  redoStack = [];
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
+undoButton.addEventListener("click", () => {
+  if (lines.length > 0) {
+    const lastLine = lines.pop();
+    redoStack.push(lastLine!);
+    currentLine = [];
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
+});
+
+redoButton.addEventListener("click", () => {
+  if (redoStack.length > 0) {
+    const redoLine = redoStack.pop();
+    lines.push(redoLine!);
+    currentLine = [];
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
 });
 
 canvas.addEventListener("drawing-changed", () => {
