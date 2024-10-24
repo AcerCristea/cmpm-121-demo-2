@@ -20,29 +20,73 @@ const clearButton = document.createElement("button");
 clearButton.innerText = "Clear";
 app.append(clearButton);
 
+let lines: { x: number; y: number }[][] = [];
+let currentLine: { x: number; y: number }[] = [];
 let isDrawing = false;
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  context.beginPath();
-  context.moveTo(e.offsetX, e.offsetY);
+  currentLine = [];
+  currentLine.push({ x: e.offsetX, y: e.offsetY });
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
 
 canvas.addEventListener("mousemove", (e) => {
   if (isDrawing) {
-    context.lineTo(e.offsetX, e.offsetY);
-    context.stroke();
+    currentLine.push({ x: e.offsetX, y: e.offsetY });
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
   }
 });
 
 canvas.addEventListener("mouseup", () => {
-  isDrawing = false;
+  if (isDrawing) {
+    isDrawing = false;
+    lines.push(currentLine);
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
 });
 
 canvas.addEventListener("mouseout", () => {
-  isDrawing = false;
+  if (isDrawing) {
+    isDrawing = false;
+    lines.push(currentLine);
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
 });
 
 clearButton.addEventListener("click", () => {
+  lines = [];
+  currentLine = [];
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
+canvas.addEventListener("drawing-changed", () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Redraw all lines from the lines array
+  lines.forEach((line) => {
+    context.beginPath();
+    for (let i = 0; i < line.length; i++) {
+      const point = line[i];
+      if (i === 0) {
+        context.moveTo(point.x, point.y); // the first point
+      } else {
+        context.lineTo(point.x, point.y);
+      }
+    }
+    context.stroke();
+  });
+
+  if (currentLine.length > 0) {
+    context.beginPath();
+    for (let i = 0; i < currentLine.length; i++) {
+      const point = currentLine[i];
+      if (i === 0) {
+        context.moveTo(point.x, point.y);
+      } else {
+        context.lineTo(point.x, point.y);
+      }
+    }
+    context.stroke();
+  }
 });
