@@ -32,6 +32,31 @@ class MarkerLine implements Displayable {
   }
 }
 
+class ToolPreview implements Displayable {
+  private x: number;
+  private y: number;
+  private thickness: number;
+
+  constructor(thickness: number) {
+    this.x = 0;
+    this.y = 0;
+    this.thickness = thickness;
+  }
+
+  update(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  display(context: CanvasRenderingContext2D) {
+    context.lineWidth = 1;
+    context.strokeStyle = "gray";
+    context.beginPath();
+    context.arc(this.x, this.y, this.thickness / 2, 0, 2 * Math.PI);
+    context.stroke();
+  }
+}
+
 import "./style.css";
 
 const APP_NAME = "Draw with Me";
@@ -78,12 +103,21 @@ let redoStack: Displayable[] = [];
 let currentLine: MarkerLine | null = null;
 let isDrawing = false;
 let lineThickness = 4;
+let toolPreview: ToolPreview = new ToolPreview(lineThickness);
+let showPreview = true;
+
+toolPreview.update(canvas.width / 2, canvas.height / 2); // Set initial preview position
+updateSelectedTool(defaultButton);
 
 function updateSelectedTool(selectedButton: HTMLButtonElement) {
   defaultButton.classList.remove("selectedTool");
   thinButton.classList.remove("selectedTool");
   thickButton.classList.remove("selectedTool");
   selectedButton.classList.add("selectedTool");
+
+  toolPreview = new ToolPreview(lineThickness);
+  showPreview = true;
+  
 }
 
 thinButton.addEventListener("click", () => {
@@ -106,6 +140,7 @@ canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
   currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness);
   redoStack = [];
+  showPreview = false;
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
 
@@ -113,6 +148,10 @@ canvas.addEventListener("mousemove", (e) => {
   if (isDrawing && currentLine) {
     currentLine.drag(e.offsetX, e.offsetY);
     canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
+  if (toolPreview && showPreview) {
+    toolPreview.update(e.offsetX, e.offsetY);
+    canvas.dispatchEvent(new CustomEvent("tool-moved"));
   }
 });
 
@@ -168,5 +207,15 @@ canvas.addEventListener("drawing-changed", () => {
 
   if (currentLine) {
     currentLine.display(context);
+  }
+
+  if (toolPreview && showPreview && !isDrawing) {
+    toolPreview.display(context);
+  }
+});
+
+canvas.addEventListener("tool-moved", () => {
+  if (toolPreview && showPreview) {
+    toolPreview.display(context);
   }
 });
