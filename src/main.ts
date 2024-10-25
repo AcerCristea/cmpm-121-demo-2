@@ -5,7 +5,7 @@ interface Displayable {
 class MarkerLine implements Displayable {
   private points: { x: number; y: number }[] = [];
   private thickness: number;
-  
+
   constructor(startX: number, startY: number, thickness: number) {
     this.points.push({ x: startX, y: startY });
     this.thickness = thickness;
@@ -57,6 +57,60 @@ class ToolPreview implements Displayable {
   }
 }
 
+class StickerPreview implements Displayable {
+  private x: number;
+  private y: number;
+  private sticker: string;
+
+  constructor(sticker: string) {
+    this.x = 0;
+    this.y = 0;
+    this.sticker = sticker;
+  }
+
+  update(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  display(context: CanvasRenderingContext2D) {
+    context.font = "26px serif";
+    const textMetrics = context.measureText(this.sticker);
+    const textWidth = textMetrics.width;
+    const textHeight = 26;
+    const centeredX = this.x - textWidth / 2;
+    const centeredY = this.y + textHeight / 2;
+    context.fillText(this.sticker, centeredX, centeredY);
+  }
+}
+
+class Sticker implements Displayable {
+  private sticker: string;
+  private x: number;
+  private y: number;
+
+  constructor(sticker: string, x: number, y: number) {
+    this.sticker = sticker;
+    this.x = x;
+    this.y = y;
+  }
+
+  drag(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  display(context: CanvasRenderingContext2D) {
+    context.font = "26x seriif";
+    const textMetrics = context.measureText(this.sticker);
+    const textWidth = textMetrics.width;
+    const textHeight = 26;
+    const centeredX = this.x - textWidth / 2;
+    const centeredY = this.y + textHeight / 2;
+    context.fillText(this.sticker, centeredX, centeredY);
+  }
+}
+
 import "./style.css";
 
 const APP_NAME = "Draw with Me";
@@ -98,6 +152,25 @@ const thickButton = document.createElement("button");
 thickButton.innerText = "Thick Marker";
 app.append(thickButton);
 
+const stickerButtons = [
+  { emoji: "🍭", label: "Lollipop" },
+  { emoji: "⭐", label: "Star" },
+  { emoji: "❤️", label: "Heart" },
+];
+
+stickerButtons.forEach(({ emoji, label }) => {
+  const button = document.createElement("button");
+  button.innerText = label;
+  app.append(button);
+
+  button.addEventListener("click", () => {
+    currentSticker = new Sticker(emoji, 0, 0);
+    stickerPreview = new StickerPreview(emoji);
+    showPreview = true;
+    canvas.dispatchEvent(new CustomEvent("tool-moved"));
+  });
+});
+
 let lines: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let currentLine: MarkerLine | null = null;
@@ -105,8 +178,10 @@ let isDrawing = false;
 let lineThickness = 4;
 let toolPreview: ToolPreview = new ToolPreview(lineThickness);
 let showPreview = true;
+let stickerPreview: StickerPreview | null = null;
+let currentSticker: Sticker | null = null;
 
-toolPreview.update(canvas.width / 2, canvas.height / 2); // Set initial preview position
+toolPreview.update(canvas.width / 2, canvas.height / 2);
 updateSelectedTool(defaultButton);
 
 function updateSelectedTool(selectedButton: HTMLButtonElement) {
@@ -117,7 +192,9 @@ function updateSelectedTool(selectedButton: HTMLButtonElement) {
 
   toolPreview = new ToolPreview(lineThickness);
   showPreview = true;
-  
+
+  stickerPreview = null;
+  currentSticker = null;
 }
 
 thinButton.addEventListener("click", () => {
@@ -130,7 +207,6 @@ defaultButton.addEventListener("click", () => {
   updateSelectedTool(defaultButton);
 });
 
-
 thickButton.addEventListener("click", () => {
   lineThickness = 8;
   updateSelectedTool(thickButton);
@@ -138,10 +214,20 @@ thickButton.addEventListener("click", () => {
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness);
-  redoStack = [];
-  showPreview = false;
-  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  if (currentSticker) {
+    currentSticker.drag(e.offsetX, e.offsetY);
+    lines.push(currentSticker);
+    currentSticker = null;
+    stickerPreview = null;
+    showPreview = false;
+
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  } else {
+    currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness);
+    redoStack = [];
+    showPreview = false;
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  }
 });
 
 canvas.addEventListener("mousemove", (e) => {
@@ -151,6 +237,10 @@ canvas.addEventListener("mousemove", (e) => {
   }
   if (toolPreview && showPreview) {
     toolPreview.update(e.offsetX, e.offsetY);
+    canvas.dispatchEvent(new CustomEvent("tool-moved"));
+  }
+  if (stickerPreview && currentSticker) {
+    stickerPreview.update(e.offsetX, e.offsetY);
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   }
 });
@@ -212,10 +302,21 @@ canvas.addEventListener("drawing-changed", () => {
   if (toolPreview && showPreview && !isDrawing) {
     toolPreview.display(context);
   }
+
+  if (stickerPreview && currentSticker) {
+    stickerPreview.display(context);
+  }
 });
 
 canvas.addEventListener("tool-moved", () => {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  lines.forEach((line) => line.display(context));
+
   if (toolPreview && showPreview) {
     toolPreview.display(context);
+  }
+
+  if (stickerPreview && currentSticker) {
+    stickerPreview.display(context);
   }
 });
