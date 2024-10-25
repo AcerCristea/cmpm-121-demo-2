@@ -4,9 +4,11 @@ interface Displayable {
 
 class MarkerLine implements Displayable {
   private points: { x: number; y: number }[] = [];
-
-  constructor(startX: number, startY: number) {
+  private thickness: number;
+  
+  constructor(startX: number, startY: number, thickness: number) {
     this.points.push({ x: startX, y: startY });
+    this.thickness = thickness;
   }
 
   drag(x: number, y: number) {
@@ -15,6 +17,7 @@ class MarkerLine implements Displayable {
 
   display(context: CanvasRenderingContext2D) {
     if (this.points.length > 0) {
+      context.lineWidth = this.thickness;
       context.beginPath();
       for (let i = 0; i < this.points.length; i++) {
         const point = this.points[i];
@@ -45,7 +48,6 @@ app.append(canvas);
 
 const context = canvas.getContext("2d")!;
 context.strokeStyle = "white";
-context.lineWidth = 2;
 
 const clearButton = document.createElement("button");
 clearButton.innerText = "Clear";
@@ -59,14 +61,50 @@ const redoButton = document.createElement("button");
 redoButton.innerText = "Redo";
 app.append(redoButton);
 
+const thinButton = document.createElement("button");
+thinButton.innerText = "Thin Marker";
+app.append(thinButton);
+
+const defaultButton = document.createElement("button");
+defaultButton.innerText = "Default Marker";
+app.append(defaultButton);
+
+const thickButton = document.createElement("button");
+thickButton.innerText = "Thick Marker";
+app.append(thickButton);
+
 let lines: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let currentLine: MarkerLine | null = null;
 let isDrawing = false;
+let lineThickness = 4;
+
+function updateSelectedTool(selectedButton: HTMLButtonElement) {
+  defaultButton.classList.remove("selectedTool");
+  thinButton.classList.remove("selectedTool");
+  thickButton.classList.remove("selectedTool");
+  selectedButton.classList.add("selectedTool");
+}
+
+thinButton.addEventListener("click", () => {
+  lineThickness = 2;
+  updateSelectedTool(thinButton);
+});
+
+defaultButton.addEventListener("click", () => {
+  lineThickness = 4;
+  updateSelectedTool(defaultButton);
+});
+
+
+thickButton.addEventListener("click", () => {
+  lineThickness = 8;
+  updateSelectedTool(thickButton);
+});
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  currentLine = new MarkerLine(e.offsetX, e.offsetY);
+  currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness);
   redoStack = [];
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });

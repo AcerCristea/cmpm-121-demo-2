@@ -100,3 +100,7 @@ canvas {
   filter: drop-shadow(0 0 0.75rem rgb(210, 117, 140));
   margin-top: 20px;
 }
+
+.selectedTool {
+  filter: drop-shadow(0 0 0.75rem rgb(210, 117, 140));
+}
