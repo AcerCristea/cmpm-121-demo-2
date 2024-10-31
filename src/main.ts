@@ -74,10 +74,10 @@ class StickerPreview implements Displayable {
   }
 
   display(context: CanvasRenderingContext2D) {
-    context.font = "26px serif";
+    context.font = "32px serif";
     const textMetrics = context.measureText(this.sticker);
     const textWidth = textMetrics.width;
-    const textHeight = 26;
+    const textHeight = 32;
     const centeredX = this.x - textWidth / 2;
     const centeredY = this.y + textHeight / 2;
     context.fillText(this.sticker, centeredX, centeredY);
@@ -101,10 +101,10 @@ class Sticker implements Displayable {
   }
 
   display(context: CanvasRenderingContext2D) {
-    context.font = "26x seriif";
+    context.font = "32px seriif";
     const textMetrics = context.measureText(this.sticker);
     const textWidth = textMetrics.width;
-    const textHeight = 26;
+    const textHeight = 32;
     const centeredX = this.x - textWidth / 2;
     const centeredY = this.y + textHeight / 2;
     context.fillText(this.sticker, centeredX, centeredY);
@@ -250,7 +250,7 @@ defaultButton.addEventListener("click", () => {
 });
 
 thickButton.addEventListener("click", () => {
-  lineThickness = 8;
+  lineThickness = 10;
   updateSelectedTool(thickButton);
 });
 
