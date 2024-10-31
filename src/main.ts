@@ -57,15 +57,15 @@ class ToolPreview implements Displayable {
   }
 }
 
-class StickerPreview implements Displayable {
+class EmojiPreview implements Displayable {
   private x: number;
   private y: number;
-  private sticker: string;
+  private emoji: string;
 
-  constructor(sticker: string) {
+  constructor(emoji: string) {
     this.x = 0;
     this.y = 0;
-    this.sticker = sticker;
+    this.emoji = emoji;
   }
 
   update(x: number, y: number) {
@@ -75,22 +75,22 @@ class StickerPreview implements Displayable {
 
   display(context: CanvasRenderingContext2D) {
     context.font = "32px serif";
-    const textMetrics = context.measureText(this.sticker);
+    const textMetrics = context.measureText(this.emoji);
     const textWidth = textMetrics.width;
     const textHeight = 32;
     const centeredX = this.x - textWidth / 2;
     const centeredY = this.y + textHeight / 2;
-    context.fillText(this.sticker, centeredX, centeredY);
+    context.fillText(this.emoji, centeredX, centeredY);
   }
 }
 
-class Sticker implements Displayable {
-  private sticker: string;
+class Emoji implements Displayable {
+  private emoji: string;
   private x: number;
   private y: number;
 
-  constructor(sticker: string, x: number, y: number) {
-    this.sticker = sticker;
+  constructor(emoji: string, x: number, y: number) {
+    this.emoji = emoji;
     this.x = x;
     this.y = y;
   }
@@ -102,12 +102,12 @@ class Sticker implements Displayable {
 
   display(context: CanvasRenderingContext2D) {
     context.font = "32px seriif";
-    const textMetrics = context.measureText(this.sticker);
+    const textMetrics = context.measureText(this.emoji);
     const textWidth = textMetrics.width;
     const textHeight = 32;
     const centeredX = this.x - textWidth / 2;
     const centeredY = this.y + textHeight / 2;
-    context.fillText(this.sticker, centeredX, centeredY);
+    context.fillText(this.emoji, centeredX, centeredY);
   }
 }
 
@@ -152,39 +152,39 @@ const thickButton = document.createElement("button");
 thickButton.innerText = "Thick Marker";
 app.append(thickButton);
 
-const stickerData = [
+const emojiData = [
   { emoji: "🍧", label: "Ice Cream" },
   { emoji: "⭐", label: "Star" },
   { emoji: "❤️", label: "Heart" },
 ];
 
-function createStickerButton(sticker) {
+function createEmojiButton(emoji) {
   const button = document.createElement("button");
-  button.innerText = sticker.label;
+  button.innerText = emoji.label;
   app.append(button);
 
   button.addEventListener("click", () => {
-    currentSticker = new Sticker(sticker.emoji, 0, 0);
-    stickerPreview = new StickerPreview(sticker.emoji);
+    currentEmoji = new Emoji(emoji.emoji, 0, 0);
+    emojiPreview = new EmojiPreview(emoji.emoji);
     showPreview = true;
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   });
 }
 
-stickerData.forEach(createStickerButton);
+emojiData.forEach(createEmojiButton);
 
-const customStickerButton = document.createElement("button");
-customStickerButton.innerText = "Add Custom Sticker";
-app.append(customStickerButton);
+const customEmojiButton = document.createElement("button");
+customEmojiButton.innerText = "Add Custom Emoji";
+app.append(customEmojiButton);
 
-customStickerButton.addEventListener("click", () => {
-  const newStickerEmoji = prompt("Enter a new sticker emoji", "🌟");
-  if (newStickerEmoji) {
-    const newStickerLabel = prompt("Enter a label for your sticker", "Custom Sticker");
-    if (newStickerLabel) {
-      const customSticker = { emoji: newStickerEmoji, label: newStickerLabel };
-      stickerData.push(customSticker);
-      createStickerButton(customSticker);
+customEmojiButton.addEventListener("click", () => {
+  const newEmojiEmoji = prompt("Enter a new emoji:", "🌟");
+  if (newEmojiEmoji) {
+    const newEmojiLabel = prompt("Enter a label for your emoji", "Custom Emoji");
+    if (newEmojiLabel) {
+      const customEmoji = { emoji: newEmojiEmoji, label: newEmojiLabel };
+      emojiData.push(customEmoji);
+      createEmojiButton(customEmoji);
     }
   }
 });
@@ -220,8 +220,8 @@ let isDrawing = false;
 let lineThickness = 4;
 let toolPreview: ToolPreview = new ToolPreview(lineThickness);
 let showPreview = true;
-let stickerPreview: StickerPreview | null = null;
-let currentSticker: Sticker | null = null;
+let emojiPreview: EmojiPreview | null = null;
+let currentEmoji: Emoji | null = null;
 
 toolPreview.update(canvas.width / 2, canvas.height / 2);
 updateSelectedTool(defaultButton);
@@ -235,8 +235,8 @@ function updateSelectedTool(selectedButton: HTMLButtonElement) {
   toolPreview = new ToolPreview(lineThickness);
   showPreview = true;
 
-  stickerPreview = null;
-  currentSticker = null;
+  emojiPreview = null;
+  currentEmoji = null;
 }
 
 thinButton.addEventListener("click", () => {
@@ -256,11 +256,11 @@ thickButton.addEventListener("click", () => {
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  if (currentSticker) {
-    currentSticker.drag(e.offsetX, e.offsetY);
-    lines.push(currentSticker);
-    currentSticker = null;
-    stickerPreview = null;
+  if (currentEmoji) {
+    currentEmoji.drag(e.offsetX, e.offsetY);
+    lines.push(currentEmoji);
+    currentEmoji = null;
+    emojiPreview = null;
     showPreview = false;
 
     canvas.dispatchEvent(new CustomEvent("drawing-changed"));
@@ -281,8 +281,8 @@ canvas.addEventListener("mousemove", (e) => {
     toolPreview.update(e.offsetX, e.offsetY);
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   }
-  if (stickerPreview && currentSticker) {
-    stickerPreview.update(e.offsetX, e.offsetY);
+  if (emojiPreview && currentEmoji) {
+    emojiPreview.update(e.offsetX, e.offsetY);
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   }
 });
@@ -345,8 +345,8 @@ canvas.addEventListener("drawing-changed", () => {
     toolPreview.display(context);
   }
 
-  if (stickerPreview && currentSticker) {
-    stickerPreview.display(context);
+  if (emojiPreview && currentEmoji) {
+    emojiPreview.display(context);
   }
 });
 
@@ -358,7 +358,7 @@ canvas.addEventListener("tool-moved", () => {
     toolPreview.display(context);
   }
 
-  if (stickerPreview && currentSticker) {
-    stickerPreview.display(context);
+  if (emojiPreview && currentEmoji) {
+    emojiPreview.display(context);
   }
 });
