@@ -152,24 +152,43 @@ const thickButton = document.createElement("button");
 thickButton.innerText = "Thick Marker";
 app.append(thickButton);
 
-const stickerButtons = [
-  { emoji: "🍭", label: "Lollipop" },
+const stickerData = [
+  { emoji: "🍧", label: "Ice Cream" },
   { emoji: "⭐", label: "Star" },
   { emoji: "❤️", label: "Heart" },
 ];
 
-stickerButtons.forEach(({ emoji, label }) => {
+function createStickerButton(sticker) {
   const button = document.createElement("button");
-  button.innerText = label;
+  button.innerText = sticker.label;
   app.append(button);
 
   button.addEventListener("click", () => {
-    currentSticker = new Sticker(emoji, 0, 0);
-    stickerPreview = new StickerPreview(emoji);
+    currentSticker = new Sticker(sticker.emoji, 0, 0);
+    stickerPreview = new StickerPreview(sticker.emoji);
     showPreview = true;
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   });
+}
+
+stickerData.forEach(createStickerButton);
+
+const customStickerButton = document.createElement("button");
+customStickerButton.innerText = "Add Custom Sticker";
+app.append(customStickerButton);
+
+customStickerButton.addEventListener("click", () => {
+  const newStickerEmoji = prompt("Enter a new sticker emoji", "🌟");
+  if (newStickerEmoji) {
+    const newStickerLabel = prompt("Enter a label for your sticker", "Custom Sticker");
+    if (newStickerLabel) {
+      const customSticker = { emoji: newStickerEmoji, label: newStickerLabel };
+      stickerData.push(customSticker);
+      createStickerButton(customSticker);
+    }
+  }
 });
+
 
 let lines: Displayable[] = [];
 let redoStack: Displayable[] = [];
