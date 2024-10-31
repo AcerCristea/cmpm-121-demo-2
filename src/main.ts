@@ -189,6 +189,29 @@ customStickerButton.addEventListener("click", () => {
   }
 });
 
+const downloadButton = document.createElement("button");
+downloadButton.innerText = "Export Sketch";
+app.append(downloadButton);
+
+downloadButton.addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = 1024;
+  exportCanvas.height = 1024;
+  const exportContext = exportCanvas.getContext("2d")!;
+
+  exportContext.scale(1024 / canvas.width, 1024 / canvas.height);
+
+  lines.forEach((line) => line.display(exportContext));
+
+  if (currentLine) {
+    currentLine.display(exportContext);
+  }
+
+  const anchor = document.createElement("a");
+  anchor.href = exportCanvas.toDataURL("image/png");
+  anchor.download = "sketchpad.png";
+  anchor.click();
+});
 
 let lines: Displayable[] = [];
 let redoStack: Displayable[] = [];
