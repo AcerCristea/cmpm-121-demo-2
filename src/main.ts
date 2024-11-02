@@ -2,13 +2,28 @@ interface Displayable {
   display(context: CanvasRenderingContext2D): void;
 }
 
+function getRandomColor() {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function getRandomRotation() {
+  return Math.floor(Math.random() * 360);
+}
+
 class MarkerLine implements Displayable {
   private points: { x: number; y: number }[] = [];
   private thickness: number;
+  private color: string;
 
-  constructor(startX: number, startY: number, thickness: number) {
+  constructor(startX: number, startY: number, thickness: number, color: string) {
     this.points.push({ x: startX, y: startY });
     this.thickness = thickness;
+    this.color = color;
   }
 
   drag(x: number, y: number) {
@@ -18,6 +33,7 @@ class MarkerLine implements Displayable {
   display(context: CanvasRenderingContext2D) {
     if (this.points.length > 0) {
       context.lineWidth = this.thickness;
+      context.strokeStyle = this.color;
       context.beginPath();
       for (let i = 0; i < this.points.length; i++) {
         const point = this.points[i];
@@ -36,11 +52,13 @@ class ToolPreview implements Displayable {
   private x: number;
   private y: number;
   private thickness: number;
+  private color: string;
 
-  constructor(thickness: number) {
+  constructor(thickness: number, color: string) {
     this.x = 0;
     this.y = 0;
     this.thickness = thickness;
+    this.color = color;
   }
 
   update(x: number, y: number) {
@@ -50,10 +68,13 @@ class ToolPreview implements Displayable {
 
   display(context: CanvasRenderingContext2D) {
     context.lineWidth = 1;
-    context.strokeStyle = "gray";
+    context.strokeStyle = this.color;
     context.beginPath();
     context.arc(this.x, this.y, this.thickness / 2, 0, 2 * Math.PI);
     context.stroke();
+  }
+  setColor(color: string) {
+    this.color = color;
   }
 }
 
@@ -61,11 +82,18 @@ class EmojiPreview implements Displayable {
   private x: number;
   private y: number;
   private emoji: string;
+  private rotation: number;
 
-  constructor(emoji: string) {
+  constructor(emoji: string, rotation: number) {
     this.x = 0;
     this.y = 0;
     this.emoji = emoji;
+    this.rotation = rotation;
+
+  }
+
+  rotate(angle: number) {
+    this.rotation = (this.rotation + angle) % 360;
   }
 
   update(x: number, y: number) {
@@ -74,25 +102,29 @@ class EmojiPreview implements Displayable {
   }
 
   display(context: CanvasRenderingContext2D) {
+    context.save();
+    context.translate(this.x, this.y);
+    context.rotate((this.rotation * Math.PI) / 180);
     context.font = "32px serif";
-    const textMetrics = context.measureText(this.emoji);
-    const textWidth = textMetrics.width;
-    const textHeight = 32;
-    const centeredX = this.x - textWidth / 2;
-    const centeredY = this.y + textHeight / 2;
-    context.fillText(this.emoji, centeredX, centeredY);
-  }
+    context.fillText(this.emoji, -16, 16);
+    context.restore();  }
 }
 
 class Emoji implements Displayable {
   private emoji: string;
   private x: number;
   private y: number;
+  private rotation: number;
 
-  constructor(emoji: string, x: number, y: number) {
+  constructor(emoji: string, x: number, y: number, rotation: number) {
     this.emoji = emoji;
     this.x = x;
     this.y = y;
+    this.rotation = rotation;
+  }
+
+  rotate(angle: number) {
+    this.rotation = (this.rotation + angle) % 360;
   }
 
   drag(x: number, y: number) {
@@ -101,14 +133,12 @@ class Emoji implements Displayable {
   }
 
   display(context: CanvasRenderingContext2D) {
-    context.font = "32px seriif";
-    const textMetrics = context.measureText(this.emoji);
-    const textWidth = textMetrics.width;
-    const textHeight = 32;
-    const centeredX = this.x - textWidth / 2;
-    const centeredY = this.y + textHeight / 2;
-    context.fillText(this.emoji, centeredX, centeredY);
-  }
+    context.save();
+    context.translate(this.x, this.y);
+    context.rotate((this.rotation * Math.PI) / 180);
+    context.font = "32px serif";
+    context.fillText(this.emoji, -16, 16);
+    context.restore();  }
 }
 
 import "./style.css";
@@ -164,8 +194,9 @@ function createEmojiButton(emoji) {
   app.append(button);
 
   button.addEventListener("click", () => {
-    currentEmoji = new Emoji(emoji.emoji, 0, 0);
-    emojiPreview = new EmojiPreview(emoji.emoji);
+    const randomRotation = getRandomRotation();
+    currentEmoji = new Emoji(emoji.emoji, 0, 0, randomRotation);
+    emojiPreview = new EmojiPreview(emoji.emoji, randomRotation);
     showPreview = true;
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   });
@@ -213,12 +244,27 @@ downloadButton.addEventListener("click", () => {
   anchor.click();
 });
 
+document.addEventListener("keydown", (event) => {
+  if (emojiPreview && currentEmoji) {
+    if (event.key === "ArrowRight") {
+      emojiPreview.rotate(15);
+      currentEmoji.rotate(15);
+      canvas.dispatchEvent(new CustomEvent("tool-moved"));
+    } else if (event.key === "ArrowLeft") {
+      emojiPreview.rotate(-15);
+      currentEmoji.rotate(-15);
+      canvas.dispatchEvent(new CustomEvent("tool-moved"));
+    }
+  }
+});
+
 let lines: Displayable[] = [];
 let redoStack: Displayable[] = [];
 let currentLine: MarkerLine | null = null;
 let isDrawing = false;
 let lineThickness = 4;
-let toolPreview: ToolPreview = new ToolPreview(lineThickness);
+let currentColor: string = getRandomColor();
+let toolPreview: ToolPreview = new ToolPreview(lineThickness, currentColor);
 let showPreview = true;
 let emojiPreview: EmojiPreview | null = null;
 let currentEmoji: Emoji | null = null;
@@ -232,7 +278,7 @@ function updateSelectedTool(selectedButton: HTMLButtonElement) {
   thickButton.classList.remove("selectedTool");
   selectedButton.classList.add("selectedTool");
 
-  toolPreview = new ToolPreview(lineThickness);
+  toolPreview = new ToolPreview(lineThickness, currentColor);
   showPreview = true;
 
   emojiPreview = null;
@@ -241,16 +287,22 @@ function updateSelectedTool(selectedButton: HTMLButtonElement) {
 
 thinButton.addEventListener("click", () => {
   lineThickness = 2;
+  currentColor = getRandomColor();
+  toolPreview.setColor(currentColor);
   updateSelectedTool(thinButton);
 });
 
 defaultButton.addEventListener("click", () => {
   lineThickness = 4;
+  currentColor = getRandomColor();
+  toolPreview.setColor(currentColor);
   updateSelectedTool(defaultButton);
 });
 
 thickButton.addEventListener("click", () => {
   lineThickness = 10;
+  currentColor = getRandomColor();
+  toolPreview.setColor(currentColor);
   updateSelectedTool(thickButton);
 });
 
@@ -265,7 +317,7 @@ canvas.addEventListener("mousedown", (e) => {
 
     canvas.dispatchEvent(new CustomEvent("drawing-changed"));
   } else {
-    currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness);
+    currentLine = new MarkerLine(e.offsetX, e.offsetY, lineThickness, currentColor);
     redoStack = [];
     showPreview = false;
     canvas.dispatchEvent(new CustomEvent("drawing-changed"));
