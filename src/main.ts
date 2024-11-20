@@ -155,37 +155,48 @@ canvas.width = 256;
 canvas.height = 256;
 app.append(canvas);
 
+const boxContainer = document.createElement("div")
+const upperBox = document.createElement("div");
+const lowerBox = document.createElement("div");
+
+app.append(boxContainer);
+boxContainer.classList.add("boxContainer");
+
+boxContainer.append(upperBox);
+boxContainer.append(lowerBox);
+
+
 const context = canvas.getContext("2d")!;
 context.strokeStyle = "white";
 
 const clearButton = document.createElement("button");
 clearButton.innerText = "Clear";
-app.append(clearButton);
+upperBox.append(clearButton);
 
 const undoButton = document.createElement("button");
 undoButton.innerText = "Undo";
-app.append(undoButton);
+upperBox.append(undoButton);
 
 const redoButton = document.createElement("button");
 redoButton.innerText = "Redo";
-app.append(redoButton);
+upperBox.append(redoButton);
 
 const thinButton = document.createElement("button");
 thinButton.innerText = "Thin Marker";
-app.append(thinButton);
+lowerBox.append(thinButton);
 
 const defaultButton = document.createElement("button");
 defaultButton.innerText = "Default Marker";
-app.append(defaultButton);
+lowerBox.append(defaultButton);
 
 const thickButton = document.createElement("button");
 thickButton.innerText = "Thick Marker";
-app.append(thickButton);
+lowerBox.append(thickButton);
 
 const emojiData = [
-  { emoji: "🍧", label: "Ice Cream" },
-  { emoji: "⭐", label: "Star" },
-  { emoji: "❤️", label: "Heart" },
+  { emoji: "🍧", label: "🍧" },
+  { emoji: "⭐", label: "⭐" },
+  { emoji: "❤️", label: "❤️" },
 ];
 
 function createEmojiButton(emoji) {
@@ -222,7 +233,7 @@ customEmojiButton.addEventListener("click", () => {
 
 const downloadButton = document.createElement("button");
 downloadButton.innerText = "Export Sketch";
-app.append(downloadButton);
+upperBox.append(downloadButton);
 
 downloadButton.addEventListener("click", () => {
   const exportCanvas = document.createElement("canvas");
