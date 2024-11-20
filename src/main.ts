@@ -2,6 +2,10 @@ interface Displayable {
   display(context: CanvasRenderingContext2D): void;
 }
 
+interface emojiButtonType {
+  emoji: string, label: string
+}
+
 function getRandomColor() {
   const letters = "0123456789ABCDEF";
   let color = "#";
@@ -165,33 +169,25 @@ boxContainer.classList.add("boxContainer");
 boxContainer.append(upperBox);
 boxContainer.append(lowerBox);
 
+function createAndAppendButton(label: string, parent: HTMLElement): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.innerText = label;
+    parent.append(button);
+    return button;
+}
 
+// Canvas Context Initialization
 const context = canvas.getContext("2d")!;
 context.strokeStyle = "white";
 
-const clearButton = document.createElement("button");
-clearButton.innerText = "Clear";
-upperBox.append(clearButton);
+// Buttons Initialization
+const clearButton = createAndAppendButton("Clear", upperBox);
+const undoButton = createAndAppendButton("Undo", upperBox);
+const redoButton = createAndAppendButton("Redo", upperBox);
 
-const undoButton = document.createElement("button");
-undoButton.innerText = "Undo";
-upperBox.append(undoButton);
-
-const redoButton = document.createElement("button");
-redoButton.innerText = "Redo";
-upperBox.append(redoButton);
-
-const thinButton = document.createElement("button");
-thinButton.innerText = "Thin Marker";
-lowerBox.append(thinButton);
-
-const defaultButton = document.createElement("button");
-defaultButton.innerText = "Default Marker";
-lowerBox.append(defaultButton);
-
-const thickButton = document.createElement("button");
-thickButton.innerText = "Thick Marker";
-lowerBox.append(thickButton);
+const thinButton = createAndAppendButton("Thin Marker", lowerBox);
+const defaultButton = createAndAppendButton("Default Marker", lowerBox);
+const thickButton = createAndAppendButton("Thick Marker", lowerBox);
 
 const emojiData = [
   { emoji: "🍧", label: "🍧" },
@@ -199,7 +195,7 @@ const emojiData = [
   { emoji: "❤️", label: "❤️" },
 ];
 
-function createEmojiButton(emoji) {
+function createEmojiButton(emoji: emojiButtonType) {
   const button = document.createElement("button");
   button.innerText = emoji.label;
   app.append(button);
